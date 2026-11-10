@@ -1,5 +1,10 @@
 const documentRepository = require('../repositories/documentRepository');
 
+function toPublicDocument(document) {
+  const { storageName, ...publicDocument } = document;
+  return publicDocument;
+}
+
 async function createDocument(file, owner) {
   if (!file) {
     const error = new Error('O arquivo é obrigatório.');
@@ -7,7 +12,7 @@ async function createDocument(file, owner) {
     throw error;
   }
 
-  return documentRepository.save({
+  const document = documentRepository.save({
     id: file.filename,
     originalName: file.originalname,
     size: file.size,
@@ -15,10 +20,11 @@ async function createDocument(file, owner) {
     owner,
     storageName: file.filename,
   });
+  return toPublicDocument(document);
 }
 
 async function listDocuments(owner) {
-  return documentRepository.findByOwner(owner).map(({ storageName, ...document }) => document);
+  return documentRepository.findByOwner(owner).map(toPublicDocument);
 }
 
 async function findDocumentForDownload(id, owner) {

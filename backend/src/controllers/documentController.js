@@ -7,8 +7,7 @@ function getOwner(req) {
 async function upload(req, res, next) {
   try {
     const document = await documentService.createDocument(req.file, getOwner(req));
-    const { storageName, ...responseDocument } = document;
-    res.status(201).json(responseDocument);
+    res.status(201).json(document);
   } catch (error) {
     next(error);
   }

@@ -1,12 +1,12 @@
 const crypto = require('node:crypto');
 const fs = require('node:fs');
-const path = require('node:path');
 const express = require('express');
 const multer = require('multer');
 const documentController = require('../controllers/documentController');
+const { storageDirectory } = require('../config/storage');
+const { getMaxFileSize } = require('../config/upload');
 
 const router = express.Router();
-const storageDirectory = path.resolve(__dirname, '../../storage');
 const storage = multer.diskStorage({
   destination(req, file, callback) {
     fs.mkdir(storageDirectory, { recursive: true }, (error) => {
@@ -17,10 +17,9 @@ const storage = multer.diskStorage({
     callback(null, crypto.randomUUID());
   },
 });
-const maxFileSize = Number(process.env.MAX_FILE_SIZE || 10 * 1024 * 1024);
 const upload = multer({
   storage,
-  limits: { fileSize: maxFileSize },
+  limits: { fileSize: getMaxFileSize(process.env.MAX_FILE_SIZE), files: 1 },
 });
 
 router.post('/upload', upload.single('file'), documentController.upload);

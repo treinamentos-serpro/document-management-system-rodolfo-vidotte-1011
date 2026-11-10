@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import DocumentList from './components/DocumentList.jsx';
 import UploadComponent from './components/UploadComponent.jsx';
 import { listDocuments } from './services/api.js';
@@ -7,41 +7,32 @@ export default function App() {
   const [documents, setDocuments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
+  const latestLoad = useRef(0);
 
   async function refreshDocuments() {
+    const loadId = ++latestLoad.current;
+    setIsLoading(true);
     setLoadError('');
     try {
-      setDocuments(await listDocuments());
+      const result = await listDocuments();
+      if (loadId === latestLoad.current) {
+        setDocuments(result);
+      }
     } catch (error) {
-      setLoadError(error.message);
+      if (loadId === latestLoad.current) {
+        setLoadError(error.message);
+      }
     } finally {
-      setIsLoading(false);
+      if (loadId === latestLoad.current) {
+        setIsLoading(false);
+      }
     }
   }
 
   useEffect(() => {
-    let isCurrent = true;
-
-    listDocuments()
-      .then((result) => {
-        if (isCurrent) {
-          setDocuments(result);
-          setLoadError('');
-        }
-      })
-      .catch((error) => {
-        if (isCurrent) {
-          setLoadError(error.message);
-        }
-      })
-      .finally(() => {
-        if (isCurrent) {
-          setIsLoading(false);
-        }
-      });
-
+    refreshDocuments();
     return () => {
-      isCurrent = false;
+      latestLoad.current += 1;
     };
   }, []);
 

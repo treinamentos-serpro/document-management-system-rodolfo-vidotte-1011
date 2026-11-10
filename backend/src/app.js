@@ -18,6 +18,7 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(documentRoutes);
+app.use('/api', documentRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
